@@ -1,10 +1,4 @@
-import { useRef, useEffect, memo } from 'react'
-import { EditorState, Compartment, StateField, RangeSetBuilder } from '@codemirror/state'
-import { EditorView, keymap, lineNumbers, highlightActiveLine, Decoration } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
-import { json } from '@codemirror/lang-json'
-import { syntaxHighlighting, defaultHighlightStyle, foldGutter } from '@codemirror/language'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { useRef, useEffect, memo, useState } from 'react'
 
 interface JsonEditorProps {
   value: string
@@ -14,73 +8,129 @@ interface JsonEditorProps {
   lineClasses?: Map<number, string>
 }
 
-function buildLineDecorations(state: EditorState, lineClasses: Map<number, string>) {
-  const builder = new RangeSetBuilder<Decoration>()
-  for (let i = 1; i <= state.doc.lines; i++) {
-    const cls = lineClasses.get(i)
-    if (cls) {
-      const line = state.doc.line(i)
-      builder.add(line.from, line.from, Decoration.line({ class: cls }))
-    }
+// Cache CodeMirror modules after first load
+let cmCache: Record<string, any> | null = null
+let cmPromise: Promise<Record<string, any>> | null = null
+
+function loadCM(): Promise<Record<string, any>> {
+  if (cmCache) return Promise.resolve(cmCache)
+  if (!cmPromise) {
+    cmPromise = Promise.all([
+      import('@codemirror/state'),
+      import('@codemirror/view'),
+      import('@codemirror/commands'),
+      import('@codemirror/lang-json'),
+      import('@codemirror/language'),
+      import('@codemirror/theme-one-dark'),
+    ]).then(modules => {
+      cmCache = Object.assign({}, ...modules) as Record<string, any>
+      return cmCache!
+    })
   }
-  return builder.finish()
+  return cmPromise!
 }
 
-function createLineHighlightExtension(lineClasses: Map<number, string>) {
-  return StateField.define({
-    create(state) {
-      return buildLineDecorations(state, lineClasses)
-    },
-    update(value, tr) {
-      if (tr.docChanged) {
-        return buildLineDecorations(tr.state, lineClasses)
+function makeLineHighlightHelpers(cm: Record<string, any>) {
+  const { StateField, RangeSetBuilder, Decoration, EditorView } = cm
+
+  function buildDecorations(state: any, lineClasses: Map<number, string>) {
+    const builder = new RangeSetBuilder()
+    for (let i = 1; i <= state.doc.lines; i++) {
+      const cls = lineClasses.get(i)
+      if (cls) {
+        const line = state.doc.line(i)
+        builder.add(line.from, line.from, Decoration.line({ class: cls }))
       }
-      return value
-    },
-    provide: f => EditorView.decorations.from(f)
-  })
+    }
+    return builder.finish()
+  }
+
+  function createExtension(lineClasses: Map<number, string>) {
+    return StateField.define({
+      create: (state: any) => buildDecorations(state, lineClasses),
+      update: (value: any, tr: any) =>
+        tr.docChanged ? buildDecorations(tr.state, lineClasses) : value,
+      provide: (f: any) => EditorView.decorations.from(f),
+    })
+  }
+
+  return { createExtension }
 }
 
-export const JsonEditor = memo(function JsonEditor({ value, onChange, readOnly = false, theme = 'dark', lineClasses }: JsonEditorProps) {
+export const JsonEditor = memo(function JsonEditor({
+  value,
+  onChange,
+  readOnly = false,
+  theme = 'dark',
+  lineClasses,
+}: JsonEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const viewRef = useRef<EditorView | null>(null)
-  const highlightCompartment = useRef(new Compartment())
+  const viewRef = useRef<any>(null)
+  const compartmentRef = useRef<any>(null)
+  const helpersRef = useRef<ReturnType<typeof makeLineHighlightHelpers> | null>(null)
+  const [ready, setReady] = useState(false)
+  const valueRef = useRef(value)
+  valueRef.current = value
+  const lineClassesRef = useRef(lineClasses)
+  lineClassesRef.current = lineClasses
 
+  // Load CodeMirror and create editor
   useEffect(() => {
     if (!containerRef.current) return
+    let destroyed = false
 
-    const extensions = [
-      json(),
-      lineNumbers(),
-      foldGutter(),
-      highlightActiveLine(),
-      history(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
-      syntaxHighlighting(defaultHighlightStyle),
-      EditorView.lineWrapping,
-      ...(theme === 'dark' ? [oneDark] : []),
-      ...(readOnly ? [EditorState.readOnly.of(true)] : []),
-      ...(onChange
-        ? [EditorView.updateListener.of(update => {
-            if (update.docChanged) {
-              onChange(update.state.doc.toString())
-            }
-          })]
-        : []),
-      highlightCompartment.current.of(
-        lineClasses && lineClasses.size > 0
-          ? createLineHighlightExtension(lineClasses)
-          : []
-      ),
-    ]
+    loadCM().then(cm => {
+      if (destroyed || !containerRef.current) return
 
-    const state = EditorState.create({ doc: value, extensions })
-    const view = new EditorView({ state, parent: containerRef.current })
-    viewRef.current = view
+      const {
+        EditorState, Compartment,
+        EditorView, keymap, lineNumbers, highlightActiveLine,
+        defaultKeymap, history, historyKeymap,
+        json, syntaxHighlighting, defaultHighlightStyle, foldGutter, oneDark,
+      } = cm
 
-    return () => view.destroy()
+      const helpers = makeLineHighlightHelpers(cm)
+      helpersRef.current = helpers
+
+      const hc = new Compartment()
+      compartmentRef.current = hc
+      const lc = lineClassesRef.current
+
+      const extensions = [
+        json(),
+        lineNumbers(),
+        foldGutter(),
+        highlightActiveLine(),
+        history(),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        syntaxHighlighting(defaultHighlightStyle),
+        EditorView.lineWrapping,
+        ...(theme === 'dark' ? [oneDark] : []),
+        ...(readOnly ? [EditorState.readOnly.of(true)] : []),
+        ...(onChange
+          ? [EditorView.updateListener.of((update: any) => {
+              if (update.docChanged) onChange(update.state.doc.toString())
+            })]
+          : []),
+        hc.of(lc && lc.size > 0 ? helpers.createExtension(lc) : []),
+      ]
+
+      const state = EditorState.create({ doc: valueRef.current, extensions })
+      viewRef.current = new EditorView({ state, parent: containerRef.current })
+      setReady(true)
+    })
+
+    return () => {
+      destroyed = true
+      viewRef.current?.destroy()
+      viewRef.current = null
+      compartmentRef.current = null
+      helpersRef.current = null
+      setReady(false)
+    }
   }, [theme, readOnly])
 
+  // Sync value changes
   useEffect(() => {
     const view = viewRef.current
     if (!view) return
@@ -90,19 +140,23 @@ export const JsonEditor = memo(function JsonEditor({ value, onChange, readOnly =
         changes: { from: 0, to: current.length, insert: value },
       })
     }
-  }, [value])
+  }, [value, ready])
 
+  // Sync line highlight changes
   useEffect(() => {
     const view = viewRef.current
-    if (!view) return
+    const hc = compartmentRef.current
+    const helpers = helpersRef.current
+    if (!view || !hc || !helpers) return
+
     view.dispatch({
-      effects: highlightCompartment.current.reconfigure(
+      effects: hc.reconfigure(
         lineClasses && lineClasses.size > 0
-          ? createLineHighlightExtension(lineClasses)
+          ? helpers.createExtension(lineClasses)
           : []
       ),
     })
-  }, [lineClasses])
+  }, [lineClasses, ready])
 
   return (
     <div
