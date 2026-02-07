@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 interface ToastItem {
   id: number
   message: string
@@ -8,7 +10,7 @@ interface ToastContainerProps {
   toasts: ToastItem[]
 }
 
-export function ToastContainer({ toasts }: ToastContainerProps) {
+export const ToastContainer = memo(function ToastContainer({ toasts }: ToastContainerProps) {
   if (toasts.length === 0) return null
 
   return (
@@ -25,4 +27,4 @@ export function ToastContainer({ toasts }: ToastContainerProps) {
       ))}
     </div>
   )
-}
+})

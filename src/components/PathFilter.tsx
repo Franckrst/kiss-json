@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 interface PathFilterProps {
   path: string
   onPathChange: (path: string) => void
@@ -6,7 +8,7 @@ interface PathFilterProps {
   theme?: 'dark' | 'light'
 }
 
-export function PathFilter({ path, onPathChange, result, error, theme = 'dark' }: PathFilterProps) {
+export const PathFilter = memo(function PathFilter({ path, onPathChange, result, error, theme = 'dark' }: PathFilterProps) {
   return (
     <div className={`flex flex-col h-full border-l ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
       <div className={`p-2 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
@@ -23,4 +25,4 @@ export function PathFilter({ path, onPathChange, result, error, theme = 'dark' }
       </pre>
     </div>
   )
-}
+})

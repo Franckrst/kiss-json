@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 type Tab = 'format' | 'compare'
 
 interface HeaderProps {
@@ -7,7 +9,7 @@ interface HeaderProps {
   onToggleTheme: () => void
 }
 
-export function Header({ activeTab, onTabChange, theme, onToggleTheme }: HeaderProps) {
+export const Header = memo(function Header({ activeTab, onTabChange, theme, onToggleTheme }: HeaderProps) {
   return (
     <header className={`flex items-center justify-between h-10 px-4 border-b ${theme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-white'}`}>
       <span className={`font-bold text-sm tracking-wide ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>KISS JSON</span>
@@ -44,12 +46,16 @@ export function Header({ activeTab, onTabChange, theme, onToggleTheme }: HeaderP
         </a>
         <button
           onClick={onToggleTheme}
-          className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors text-sm`}
+          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs rounded transition-colors ${
+            theme === 'dark'
+              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
           aria-label="Toggle theme"
         >
-          {theme === 'dark' ? '\u2600' : '\u263D'}
+          {theme === 'dark' ? '☽ Dark' : '☀ Light'}
         </button>
       </div>
     </header>
   )
-}
+})
