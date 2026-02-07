@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { JsonEditor } from './JsonEditor'
 import { PathFilter } from './PathFilter'
 import { formatJson, minifyJson, sortKeys } from '../utils/json-format'
@@ -15,17 +15,23 @@ interface FormatViewProps {
 function FormatView({ theme, showToast, content, onContentChange: setContent }: FormatViewProps) {
   const [indent, setIndent] = useState<number | 'tab'>(2)
   const [filterPath, setFilterPath] = useState('')
+  const [debouncedFilterPath, setDebouncedFilterPath] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedFilterPath(filterPath), 200)
+    return () => clearTimeout(timer)
+  }, [filterPath])
 
   const validation = useMemo(() => validateJson(content), [content])
 
   const filterResult = useMemo(() => {
-    if (!filterPath || !validation.valid) return { result: '', error: undefined }
+    if (!debouncedFilterPath || !validation.valid) return { result: '', error: undefined }
     try {
-      return { result: filterByPath(content, filterPath), error: undefined }
+      return { result: filterByPath(content, debouncedFilterPath), error: undefined }
     } catch {
       return { result: '', error: 'Invalid path or JSON' }
     }
-  }, [content, filterPath, validation.valid])
+  }, [content, debouncedFilterPath, validation.valid])
 
   const handleFormat = useCallback(() => {
     try {
