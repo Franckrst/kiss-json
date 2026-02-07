@@ -54,12 +54,16 @@ function App() {
       />
       <div className="relative flex-1 overflow-hidden min-h-0">
         <Suspense fallback={null}>
-          <div className={`absolute inset-0 flex flex-col overflow-hidden ${activeTab !== 'format' ? 'invisible pointer-events-none' : ''}`}>
-            <FormatView theme={theme} showToast={showToast} content={formatContent} onContentChange={setFormatContent} />
-          </div>
-          <div className={`absolute inset-0 flex flex-col overflow-hidden ${activeTab !== 'compare' ? 'invisible pointer-events-none' : ''}`}>
-            <CompareView theme={theme} showToast={showToast} leftContent={formatContent} onLeftContentChange={setFormatContent} />
-          </div>
+          {activeTab === 'format' && (
+            <div className="absolute inset-0 flex flex-col overflow-hidden">
+              <FormatView theme={theme} showToast={showToast} content={formatContent} onContentChange={setFormatContent} />
+            </div>
+          )}
+          {activeTab === 'compare' && (
+            <div className="absolute inset-0 flex flex-col overflow-hidden">
+              <CompareView theme={theme} showToast={showToast} leftContent={formatContent} onLeftContentChange={setFormatContent} />
+            </div>
+          )}
         </Suspense>
       </div>
       <ToastContainer toasts={toasts} />
