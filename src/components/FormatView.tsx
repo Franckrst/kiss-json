@@ -80,7 +80,7 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-700">
+      <div className={`flex items-center gap-2 px-3 py-2 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
         <button data-action="format" onClick={handleFormat} className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white">
           Format
         </button>
@@ -97,7 +97,7 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
         <select
           value={String(indent)}
           onChange={e => setIndent(e.target.value === 'tab' ? 'tab' : Number(e.target.value))}
-          className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white"
+          className={`px-2 py-1 text-xs border rounded ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
         >
           <option value="2">2 spaces</option>
           <option value="4">4 spaces</option>
@@ -121,7 +121,7 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
 
       {/* Error banner */}
       {!validation.valid && validation.error && content && (
-        <div className="px-3 py-1 text-xs bg-red-900/50 text-red-300 border-b border-red-800">
+        <div className={`px-3 py-1 text-xs border-b ${theme === 'dark' ? 'bg-red-900/50 text-red-300 border-red-800' : 'bg-red-50 text-red-700 border-red-300'}`}>
           {validation.error.message}
           {validation.error.position !== undefined && ` (position ${validation.error.position})`}
         </div>
@@ -143,19 +143,20 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
               onPathChange={setFilterPath}
               result={filterResult.result}
               error={filterResult.error}
+              theme={theme}
             />
           </div>
         )}
       </div>
 
       {/* Filter input at bottom */}
-      <div className="px-3 py-2 border-t border-gray-700">
+      <div className={`px-3 py-2 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
         <input
           type="text"
           value={filterPath}
           onChange={e => setFilterPath(e.target.value)}
           placeholder="Filter: .data.users[0].name"
-          className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          className={`w-full px-2 py-1 text-sm border rounded placeholder-gray-500 focus:outline-none focus:border-blue-500 ${theme === 'dark' ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
         />
       </div>
     </div>

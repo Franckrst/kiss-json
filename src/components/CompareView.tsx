@@ -58,7 +58,7 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-700">
+      <div className={`flex items-center gap-2 px-3 py-2 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
         <div className="flex gap-1">
           <button
             onClick={() => setViewMode('text')}
@@ -79,7 +79,7 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
         </button>
 
         {diffResult && (
-          <span className="ml-auto text-xs text-gray-400">
+          <span className={`ml-auto text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             {diffResult.totalChanges} {diffResult.totalChanges === 1 ? 'difference' : 'differences'}
           </span>
         )}
@@ -88,12 +88,12 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
       {/* Editors side by side */}
       {viewMode === 'text' ? (
         <div className="flex flex-1 overflow-hidden">
-          <div className="flex flex-col w-1/2 border-r border-gray-700">
-            <div className="flex items-center justify-between px-2 py-1 border-b border-gray-700 text-xs text-gray-400">
+          <div className={`flex flex-col w-1/2 border-r ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
+            <div className={`flex items-center justify-between px-2 py-1 border-b text-xs ${theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-300 text-gray-600'}`}>
               <span>A - Original</span>
               <div className="flex gap-1">
-                <button onClick={() => handleFormat('left')} className="px-1 hover:text-white">Format</button>
-                <label className="px-1 hover:text-white cursor-pointer">
+                <button onClick={() => handleFormat('left')} className={`px-1 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>Format</button>
+                <label className={`px-1 cursor-pointer ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>
                   Import
                   <input type="file" accept=".json" className="hidden" onChange={e => {
                     const file = e.target.files?.[0]
@@ -107,11 +107,11 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
             </div>
           </div>
           <div className="flex flex-col w-1/2">
-            <div className="flex items-center justify-between px-2 py-1 border-b border-gray-700 text-xs text-gray-400">
+            <div className={`flex items-center justify-between px-2 py-1 border-b text-xs ${theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-300 text-gray-600'}`}>
               <span>B - Modified</span>
               <div className="flex gap-1">
-                <button onClick={() => handleFormat('right')} className="px-1 hover:text-white">Format</button>
-                <label className="px-1 hover:text-white cursor-pointer">
+                <button onClick={() => handleFormat('right')} className={`px-1 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>Format</button>
+                <label className={`px-1 cursor-pointer ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>
                   Import
                   <input type="file" accept=".json" className="hidden" onChange={e => {
                     const file = e.target.files?.[0]
@@ -126,13 +126,13 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
           </div>
         </div>
       ) : (
-        <TreeDiffPanel diffResult={diffResult} />
+        <TreeDiffPanel diffResult={diffResult} theme={theme} />
       )}
     </div>
   )
 }
 
-function TreeDiffPanel({ diffResult }: { diffResult: DiffResult | null }) {
+function TreeDiffPanel({ diffResult, theme }: { diffResult: DiffResult | null; theme: 'dark' | 'light' }) {
   if (!diffResult) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
@@ -157,16 +157,16 @@ function TreeDiffPanel({ diffResult }: { diffResult: DiffResult | null }) {
             key={i}
             className={`flex items-start gap-2 px-2 py-1 rounded text-sm font-mono ${
               change.type === 'added'
-                ? 'bg-green-900/30 text-green-300'
+                ? theme === 'dark' ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-800'
                 : change.type === 'removed'
-                ? 'bg-red-900/30 text-red-300'
-                : 'bg-yellow-900/30 text-yellow-300'
+                ? theme === 'dark' ? 'bg-red-900/30 text-red-300' : 'bg-red-100 text-red-800'
+                : theme === 'dark' ? 'bg-yellow-900/30 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
             }`}
           >
             <span className="font-bold w-4 text-center">
               {change.type === 'added' ? '+' : change.type === 'removed' ? '-' : '~'}
             </span>
-            <span className="text-gray-400">{change.path}</span>
+            <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{change.path}</span>
             {change.type === 'modified' && (
               <span>
                 <span className="text-red-400 line-through">{JSON.stringify(change.oldValue)}</span>

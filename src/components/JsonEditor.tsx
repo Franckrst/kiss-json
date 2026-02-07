@@ -61,7 +61,7 @@ export function JsonEditor({ value, onChange, readOnly = false, theme = 'dark' }
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-auto border border-gray-700 rounded"
+      className={`h-full w-full overflow-auto border rounded ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}
     />
   )
 }
