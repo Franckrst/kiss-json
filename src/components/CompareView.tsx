@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { diffLines } from 'diff'
 import { JsonEditor } from './JsonEditor'
 import { computeJsonDiff } from '../utils/json-diff'
 import type { DiffResult } from '../utils/json-diff'
@@ -8,12 +9,52 @@ import { validateJson } from '../utils/json-validate'
 interface CompareViewProps {
   theme: 'dark' | 'light'
   showToast: (msg: string, type?: 'success' | 'error') => void
+  leftContent: string
+  onLeftContentChange: (value: string) => void
 }
 
 type ViewMode = 'text' | 'tree'
 
-export function CompareView({ theme, showToast }: CompareViewProps) {
-  const [leftContent, setLeftContent] = useState('')
+function countLines(value: string): number {
+  if (!value) return 0
+  const parts = value.split('\n')
+  return value.endsWith('\n') ? parts.length - 1 : parts.length
+}
+
+function computeLineDiffs(left: string, right: string) {
+  const leftLines = new Map<number, string>()
+  const rightLines = new Map<number, string>()
+
+  if (!left && !right) return { leftLines, rightLines }
+
+  const changes = diffLines(left, right)
+  let leftLine = 1
+  let rightLine = 1
+
+  for (const change of changes) {
+    const count = countLines(change.value)
+    if (count === 0) continue
+
+    if (change.added) {
+      for (let i = 0; i < count; i++) {
+        rightLines.set(rightLine + i, 'cm-diff-added')
+      }
+      rightLine += count
+    } else if (change.removed) {
+      for (let i = 0; i < count; i++) {
+        leftLines.set(leftLine + i, 'cm-diff-removed')
+      }
+      leftLine += count
+    } else {
+      leftLine += count
+      rightLine += count
+    }
+  }
+
+  return { leftLines, rightLines }
+}
+
+function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLeftContent }: CompareViewProps) {
   const [rightContent, setRightContent] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('text')
 
@@ -28,6 +69,11 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
       return null
     }
   }, [leftContent, rightContent, leftValid.valid, rightValid.valid])
+
+  const lineDiffs = useMemo(
+    () => computeLineDiffs(leftContent, rightContent),
+    [leftContent, rightContent]
+  )
 
   const handleSwap = useCallback(() => {
     const temp = leftContent
@@ -104,7 +150,7 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <JsonEditor value={leftContent} onChange={setLeftContent} theme={theme} />
+              <JsonEditor value={leftContent} onChange={setLeftContent} theme={theme} lineClasses={lineDiffs.leftLines} />
             </div>
           </div>
           <div className="flex flex-col w-1/2">
@@ -122,7 +168,7 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <JsonEditor value={rightContent} onChange={setRightContent} theme={theme} />
+              <JsonEditor value={rightContent} onChange={setRightContent} theme={theme} lineClasses={lineDiffs.rightLines} />
             </div>
           </div>
         </div>
@@ -132,6 +178,9 @@ export function CompareView({ theme, showToast }: CompareViewProps) {
     </div>
   )
 }
+
+export { CompareView }
+export default CompareView
 
 function TreeDiffPanel({ diffResult, theme }: { diffResult: DiffResult | null; theme: 'dark' | 'light' }) {
   if (!diffResult) {

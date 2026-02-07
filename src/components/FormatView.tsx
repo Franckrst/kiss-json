@@ -8,10 +8,11 @@ import { filterByPath } from '../utils/json-filter'
 interface FormatViewProps {
   theme: 'dark' | 'light'
   showToast: (msg: string, type?: 'success' | 'error') => void
+  content: string
+  onContentChange: (value: string) => void
 }
 
-export function FormatView({ theme, showToast }: FormatViewProps) {
-  const [content, setContent] = useState('')
+function FormatView({ theme, showToast, content, onContentChange: setContent }: FormatViewProps) {
   const [indent, setIndent] = useState<number | 'tab'>(2)
   const [filterPath, setFilterPath] = useState('')
 
@@ -53,15 +54,6 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
     }
   }, [content, indent, showToast])
 
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(content)
-      showToast('Copied')
-    } catch {
-      showToast('Copy failed', 'error')
-    }
-  }, [content, showToast])
-
   const handleImport = useCallback((file: File) => {
     const reader = new FileReader()
     reader.onload = e => {
@@ -90,10 +82,6 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
         <button data-action="sort" onClick={handleSort} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white">
           Sort Keys
         </button>
-        <button onClick={handleCopy} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white">
-          Copy
-        </button>
-
         <select
           value={String(indent)}
           onChange={e => setIndent(e.target.value === 'tab' ? 'tab' : Number(e.target.value))}
@@ -162,3 +150,6 @@ export function FormatView({ theme, showToast }: FormatViewProps) {
     </div>
   )
 }
+
+export { FormatView }
+export default FormatView

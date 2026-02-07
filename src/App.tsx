@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Header } from './components/Header'
-import { FormatView } from './components/FormatView'
-import { CompareView } from './components/CompareView'
 import { ToastContainer } from './components/Toast'
 import { useTheme } from './hooks/useTheme'
 import { useToast } from './hooks/useToast'
+
+const FormatView = lazy(() => import('./components/FormatView'))
+const CompareView = lazy(() => import('./components/CompareView'))
 
 type Tab = 'format' | 'compare'
 
@@ -12,6 +13,7 @@ function App() {
   const { theme, toggleTheme } = useTheme()
   const { toasts, showToast } = useToast()
   const [activeTab, setActiveTab] = useState<Tab>('format')
+  const [formatContent, setFormatContent] = useState('')
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -41,11 +43,16 @@ function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
       />
-      {activeTab === 'format' ? (
-        <FormatView theme={theme} showToast={showToast} />
-      ) : (
-        <CompareView theme={theme} showToast={showToast} />
-      )}
+      <div className="relative flex-1 overflow-hidden min-h-0">
+        <Suspense fallback={null}>
+          <div className={`absolute inset-0 flex flex-col overflow-hidden ${activeTab !== 'format' ? 'invisible pointer-events-none' : ''}`}>
+            <FormatView theme={theme} showToast={showToast} content={formatContent} onContentChange={setFormatContent} />
+          </div>
+          <div className={`absolute inset-0 flex flex-col overflow-hidden ${activeTab !== 'compare' ? 'invisible pointer-events-none' : ''}`}>
+            <CompareView theme={theme} showToast={showToast} leftContent={formatContent} onLeftContentChange={setFormatContent} />
+          </div>
+        </Suspense>
+      </div>
       <ToastContainer toasts={toasts} />
     </div>
   )
