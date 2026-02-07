@@ -13,7 +13,16 @@ function App() {
   const { theme, toggleTheme } = useTheme()
   const { toasts, showToast } = useToast()
   const [activeTab, setActiveTab] = useState<Tab>('format')
-  const [formatContent, setFormatContent] = useState('')
+  const [formatContent, setFormatContent] = useState(
+    () => localStorage.getItem('kiss-json-content') ?? ''
+  )
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem('kiss-json-content', formatContent)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [formatContent])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

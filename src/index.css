@@ -12,3 +12,11 @@ html, body, #root {
 .light {
   color-scheme: light;
 }
+
+.cm-diff-added {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+}
+
+.cm-diff-removed {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+}
