@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { JsonEditor } from './JsonEditor'
-import { computeJsonDiff, DiffResult } from '../utils/json-diff'
+import { computeJsonDiff } from '../utils/json-diff'
+import type { DiffResult } from '../utils/json-diff'
 import { formatJson } from '../utils/json-format'
 import { validateJson } from '../utils/json-validate'
 

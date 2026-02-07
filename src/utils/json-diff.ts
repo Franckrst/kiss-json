@@ -1,8 +1,10 @@
-export enum DiffType {
-  Added = 'added',
-  Removed = 'removed',
-  Modified = 'modified',
-}
+export const DiffType = {
+  Added: 'added',
+  Removed: 'removed',
+  Modified: 'modified',
+} as const
+
+export type DiffType = (typeof DiffType)[keyof typeof DiffType]
 
 export interface DiffChange {
   type: DiffType
