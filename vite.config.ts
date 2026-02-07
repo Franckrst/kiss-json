@@ -4,6 +4,25 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          codemirror: [
+            'codemirror',
+            '@codemirror/state',
+            '@codemirror/view',
+            '@codemirror/commands',
+            '@codemirror/lang-json',
+            '@codemirror/language',
+            '@codemirror/theme-one-dark',
+          ],
+          diff: ['diff'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
