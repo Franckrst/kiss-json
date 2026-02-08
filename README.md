@@ -21,6 +21,7 @@
 - Validate JSON with real-time error messages
 - Filter by path (e.g. `data.users[0].name`)
 - Import from file or URL with drag-and-drop
+- Load JSON via query parameter: `https://kissjson.com/?url=https://api.example.com/data.json`
 - Light / Dark theme
 - Keyboard shortcuts (`Ctrl+Shift+F` format, `Ctrl+Shift+M` minify, `Ctrl+Shift+S` sort)
 
