@@ -18,9 +18,8 @@ test('format content appears in compare original editor when switching tabs', as
   // Compare view has label "A - Original" above its first editor
   await expect(page.getByText('A - Original')).toBeVisible()
 
-  // Get the CodeMirror editors that are visible (in the Compare view)
-  // The Compare tab's left editor is the first .cm-editor under the visible panel
-  const compareLeftEditor = page.locator('.cm-editor .cm-content').nth(1)
+  // The Compare tab's left editor has aria-label "Original JSON editor"
+  const compareLeftEditor = page.getByRole('textbox', { name: 'Original JSON editor' })
   await expect(compareLeftEditor).toContainText('"hello"')
   await expect(compareLeftEditor).toContainText('"world"')
 })
