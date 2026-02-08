@@ -1,9 +1,7 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { JsonEditor } from './JsonEditor'
 import { PathFilter } from './PathFilter'
-import { formatJson, minifyJson, sortKeys } from '../utils/json-format'
-import { validateJson } from '../utils/json-validate'
-import { filterByPath } from '../utils/json-filter'
+import { useJsonWorker } from '../hooks/useJsonWorker'
 
 interface FormatViewProps {
   theme: 'dark' | 'light'
@@ -13,6 +11,7 @@ interface FormatViewProps {
 }
 
 function FormatView({ theme, showToast, content, onContentChange: setContent }: FormatViewProps) {
+  const worker = useJsonWorker()
   const [indent, setIndent] = useState<number | 'tab'>(2)
   const [filterPath, setFilterPath] = useState('')
   const [debouncedFilterPath, setDebouncedFilterPath] = useState('')
@@ -22,38 +21,56 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
     return () => clearTimeout(timer)
   }, [filterPath])
 
-  const validation = useMemo(() => validateJson(content), [content])
+  const [validation, setValidation] = useState<{ valid: boolean; error?: { message: string; position?: number } }>({ valid: true })
 
-  const filterResult = useMemo(() => {
-    if (!debouncedFilterPath || !validation.valid) return { result: '', error: undefined }
-    try {
-      return { result: filterByPath(content, debouncedFilterPath), error: undefined }
-    } catch {
-      return { result: '', error: 'Invalid path or JSON' }
+  useEffect(() => {
+    let cancelled = false
+    worker.validate(content).then(result => {
+      if (!cancelled) setValidation(result)
+    })
+    return () => { cancelled = true }
+  }, [content])
+
+  const [filterResult, setFilterResult] = useState<{ result: string; error?: string }>({ result: '' })
+
+  useEffect(() => {
+    if (!debouncedFilterPath || !validation.valid) {
+      setFilterResult({ result: '' })
+      return
     }
+    let cancelled = false
+    worker.filter(content, debouncedFilterPath).then(result => {
+      if (!cancelled) setFilterResult({ result, error: undefined })
+    }).catch(() => {
+      if (!cancelled) setFilterResult({ result: '', error: 'Invalid path or JSON' })
+    })
+    return () => { cancelled = true }
   }, [content, debouncedFilterPath, validation.valid])
 
-  const handleFormat = useCallback(() => {
+  const handleFormat = useCallback(async () => {
     try {
-      setContent(formatJson(content, indent))
+      const result = await worker.format(content, indent)
+      setContent(result)
       showToast('Formatted')
     } catch {
       showToast('Invalid JSON', 'error')
     }
   }, [content, indent, showToast])
 
-  const handleMinify = useCallback(() => {
+  const handleMinify = useCallback(async () => {
     try {
-      setContent(minifyJson(content))
+      const result = await worker.minify(content)
+      setContent(result)
       showToast('Minified')
     } catch {
       showToast('Invalid JSON', 'error')
     }
   }, [content, showToast])
 
-  const handleSort = useCallback(() => {
+  const handleSort = useCallback(async () => {
     try {
-      setContent(sortKeys(content, indent))
+      const result = await worker.sort(content, indent)
+      setContent(result)
       showToast('Keys sorted')
     } catch {
       showToast('Invalid JSON', 'error')
