@@ -2,7 +2,7 @@
 
 **JSON formatter, validator and comparator — simple, fast, no ads.**
 
-[Try KISS JSON](https://kissjson.com) | [GitHub](https://github.com/Franckrst/kiss-json)
+[Try KISS JSON](https://json.o6r.org/) | [GitHub](https://github.com/Franckrst/kiss-json)
 
 ---
 
