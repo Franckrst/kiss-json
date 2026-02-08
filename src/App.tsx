@@ -18,6 +18,24 @@ function App() {
   )
 
   useEffect(() => {
+    const url = new URLSearchParams(window.location.search).get('url')
+    if (!url) return
+    let cancelled = false
+    import('./utils/fetch-json').then(({ fetchJsonFromUrl }) =>
+      fetchJsonFromUrl(url)
+    ).then(result => {
+      if (cancelled) return
+      if (result.ok) {
+        setFormatContent(result.data)
+        showToast('Loaded from URL')
+      } else {
+        showToast(result.error, 'error')
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem('kiss-json-content', formatContent)
     }, 500)
