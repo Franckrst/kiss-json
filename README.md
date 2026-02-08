@@ -30,10 +30,11 @@ KISS JSON is designed to feel instant:
 
 - **Code splitting** — FormatView and CompareView are lazy-loaded with `React.lazy` + `Suspense`. You only download what you use.
 - **Manual chunks** — Vite splits vendor bundles into separate cacheable chunks: `react-vendor`, `codemirror`, and `diff`. Returning visitors load from cache.
-- **Memoization** — All leaf components use `React.memo`. Expensive computations (validation, diffing, filtering) are wrapped in `useMemo`. Callbacks use `useCallback` to avoid unnecessary re-renders.
+- **Memoization** — All leaf components use `React.memo`. Lightweight computations use `useMemo`. Callbacks use `useCallback` to avoid unnecessary re-renders.
 - **Debouncing** — Path filter input is debounced (200ms) to avoid recomputing on every keystroke. LocalStorage persistence is debounced (500ms).
 - **CodeMirror module caching** — CodeMirror modules are loaded once and cached at module level with promise deduplication, so multiple editor instances share a single import.
 - **Dynamic imports** — The URL fetch module is only loaded when you click the URL button, keeping the initial bundle small.
+- **Web Worker** — All JSON operations (format, minify, sort, validate, filter, diff) run in a dedicated Web Worker thread. The UI never freezes, even on large files.
 - **CSS injection** — `vite-plugin-css-injected-by-js` bundles CSS into JS, eliminating extra HTTP requests and FOUC.
 
 ## Tech Stack
