@@ -69,6 +69,26 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
     reader.readAsText(file)
   }, [])
 
+  const [urlInput, setUrlInput] = useState('')
+  const [showUrlInput, setShowUrlInput] = useState(false)
+  const [fetching, setFetching] = useState(false)
+
+  const handleFetchUrl = useCallback(async () => {
+    if (!urlInput.trim()) return
+    setFetching(true)
+    const { fetchJsonFromUrl } = await import('../utils/fetch-json')
+    const result = await fetchJsonFromUrl(urlInput.trim())
+    setFetching(false)
+    if (result.ok) {
+      setContent(result.data)
+      setShowUrlInput(false)
+      setUrlInput('')
+      showToast('Loaded from URL')
+    } else {
+      showToast(result.error, 'error')
+    }
+  }, [urlInput, showToast])
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
@@ -99,13 +119,43 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
           <option value="tab">Tab</option>
         </select>
 
-        <label className="ml-auto px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white cursor-pointer">
-          Import
-          <input type="file" accept=".json" className="hidden" onChange={e => {
-            const file = e.target.files?.[0]
-            if (file) handleImport(file)
-          }} />
-        </label>
+        <div className="ml-auto flex items-center gap-1">
+          <label className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white cursor-pointer">
+            Import
+            <input type="file" accept=".json" className="hidden" onChange={e => {
+              const file = e.target.files?.[0]
+              if (file) handleImport(file)
+            }} />
+          </label>
+          <div className="relative">
+            <button
+              onClick={() => setShowUrlInput(!showUrlInput)}
+              className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white"
+            >
+              URL
+            </button>
+            {showUrlInput && (
+              <div className={`absolute right-0 top-full mt-1 flex gap-1 p-2 rounded border shadow-lg z-10 ${theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={e => setUrlInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleFetchUrl()}
+                  placeholder="https://example.com/data.json"
+                  autoFocus
+                  className={`w-72 px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                />
+                <button
+                  onClick={handleFetchUrl}
+                  disabled={fetching}
+                  className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white disabled:opacity-50 whitespace-nowrap"
+                >
+                  {fetching ? 'Loading...' : 'Fetch'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {content && (
           <span className={`text-xs ${validation.valid ? 'text-green-400' : 'text-red-400'}`}>

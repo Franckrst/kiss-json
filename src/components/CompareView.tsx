@@ -93,6 +93,28 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
     }
   }, [])
 
+  const [urlInput, setUrlInput] = useState({ left: '', right: '' })
+  const [showUrlInput, setShowUrlInput] = useState<'left' | 'right' | null>(null)
+  const [fetching, setFetching] = useState(false)
+
+  const handleFetchUrl = useCallback(async (side: 'left' | 'right') => {
+    const url = urlInput[side].trim()
+    if (!url) return
+    setFetching(true)
+    const { fetchJsonFromUrl } = await import('../utils/fetch-json')
+    const result = await fetchJsonFromUrl(url)
+    setFetching(false)
+    if (result.ok) {
+      if (side === 'left') setLeftContent(result.data)
+      else setRightContent(result.data)
+      setShowUrlInput(null)
+      setUrlInput(prev => ({ ...prev, [side]: '' }))
+      showToast('Loaded from URL')
+    } else {
+      showToast(result.error, 'error')
+    }
+  }, [urlInput, showToast])
+
   const handleFormat = useCallback((side: 'left' | 'right') => {
     try {
       if (side === 'left') setLeftContent(formatJson(leftContent))
@@ -138,7 +160,7 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
           <div className={`flex flex-col w-1/2 border-r ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
             <div className={`flex items-center justify-between px-2 py-1 border-b text-xs ${theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-300 text-gray-600'}`}>
               <span>A - Original</span>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
                 <button onClick={() => handleFormat('left')} className={`px-1 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>Format</button>
                 <label className={`px-1 cursor-pointer ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>
                   Import
@@ -147,6 +169,34 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
                     if (file) handleImport('left')(file)
                   }} />
                 </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUrlInput(showUrlInput === 'left' ? null : 'left')}
+                    className={`px-1 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}
+                  >
+                    URL
+                  </button>
+                  {showUrlInput === 'left' && (
+                    <div className={`absolute right-0 top-full mt-1 flex gap-1 p-2 rounded border shadow-lg z-10 ${theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
+                      <input
+                        type="url"
+                        value={urlInput.left}
+                        onChange={e => setUrlInput(prev => ({ ...prev, left: e.target.value }))}
+                        onKeyDown={e => e.key === 'Enter' && handleFetchUrl('left')}
+                        placeholder="https://..."
+                        autoFocus
+                        className={`w-56 px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                      />
+                      <button
+                        onClick={() => handleFetchUrl('left')}
+                        disabled={fetching}
+                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {fetching ? '...' : 'Fetch'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
@@ -156,7 +206,7 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
           <div className="flex flex-col w-1/2">
             <div className={`flex items-center justify-between px-2 py-1 border-b text-xs ${theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-300 text-gray-600'}`}>
               <span>B - Modified</span>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
                 <button onClick={() => handleFormat('right')} className={`px-1 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>Format</button>
                 <label className={`px-1 cursor-pointer ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}>
                   Import
@@ -165,6 +215,34 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
                     if (file) handleImport('right')(file)
                   }} />
                 </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUrlInput(showUrlInput === 'right' ? null : 'right')}
+                    className={`px-1 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-gray-900'}`}
+                  >
+                    URL
+                  </button>
+                  {showUrlInput === 'right' && (
+                    <div className={`absolute right-0 top-full mt-1 flex gap-1 p-2 rounded border shadow-lg z-10 ${theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
+                      <input
+                        type="url"
+                        value={urlInput.right}
+                        onChange={e => setUrlInput(prev => ({ ...prev, right: e.target.value }))}
+                        onKeyDown={e => e.key === 'Enter' && handleFetchUrl('right')}
+                        placeholder="https://..."
+                        autoFocus
+                        className={`w-56 px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500 ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                      />
+                      <button
+                        onClick={() => handleFetchUrl('right')}
+                        disabled={fetching}
+                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {fetching ? '...' : 'Fetch'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
