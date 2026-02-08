@@ -13,6 +13,7 @@ interface FormatViewProps {
 function FormatView({ theme, showToast, content, onContentChange: setContent }: FormatViewProps) {
   const worker = useJsonWorker()
   const [indent, setIndent] = useState<number | 'tab'>(2)
+  const [processing, setProcessing] = useState(false)
   const [filterPath, setFilterPath] = useState('')
   const [debouncedFilterPath, setDebouncedFilterPath] = useState('')
 
@@ -48,32 +49,41 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
   }, [content, debouncedFilterPath, validation.valid])
 
   const handleFormat = useCallback(async () => {
+    setProcessing(true)
     try {
       const result = await worker.format(content, indent)
       setContent(result)
       showToast('Formatted')
     } catch {
       showToast('Invalid JSON', 'error')
+    } finally {
+      setProcessing(false)
     }
   }, [content, indent, showToast])
 
   const handleMinify = useCallback(async () => {
+    setProcessing(true)
     try {
       const result = await worker.minify(content)
       setContent(result)
       showToast('Minified')
     } catch {
       showToast('Invalid JSON', 'error')
+    } finally {
+      setProcessing(false)
     }
   }, [content, showToast])
 
   const handleSort = useCallback(async () => {
+    setProcessing(true)
     try {
       const result = await worker.sort(content, indent)
       setContent(result)
       showToast('Keys sorted')
     } catch {
       showToast('Invalid JSON', 'error')
+    } finally {
+      setProcessing(false)
     }
   }, [content, indent, showToast])
 
@@ -116,15 +126,21 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Toolbar */}
       <div className={`flex items-center gap-2 px-3 py-2 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
-        <button data-action="format" onClick={handleFormat} className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white">
+        <button data-action="format" onClick={handleFormat} disabled={processing} className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded text-white disabled:opacity-50">
           Format
         </button>
-        <button data-action="minify" onClick={handleMinify} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white">
+        <button data-action="minify" onClick={handleMinify} disabled={processing} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white disabled:opacity-50">
           Minify
         </button>
-        <button data-action="sort" onClick={handleSort} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white">
+        <button data-action="sort" onClick={handleSort} disabled={processing} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white disabled:opacity-50">
           Sort Keys
         </button>
+        {processing && (
+          <svg className="animate-spin h-4 w-4 text-blue-400" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        )}
         <select
           value={String(indent)}
           onChange={e => setIndent(e.target.value === 'tab' ? 'tab' : Number(e.target.value))}

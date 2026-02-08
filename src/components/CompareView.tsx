@@ -56,6 +56,7 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
   const [rightContent, setRightContent] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('text')
   const worker = useJsonWorker()
+  const [processing, setProcessing] = useState(false)
 
   const [leftValid, setLeftValid] = useState<{ valid: boolean }>({ valid: false })
   const [rightValid, setRightValid] = useState<{ valid: boolean }>({ valid: false })
@@ -138,12 +139,15 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
   }, [urlInput, showToast])
 
   const handleFormat = useCallback(async (side: 'left' | 'right') => {
+    setProcessing(true)
     try {
       const result = await worker.format(side === 'left' ? leftContent : rightContent)
       if (side === 'left') setLeftContent(result)
       else setRightContent(result)
     } catch {
       showToast('Invalid JSON', 'error')
+    } finally {
+      setProcessing(false)
     }
   }, [leftContent, rightContent, showToast])
 
@@ -169,6 +173,13 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
         <button onClick={handleSwap} className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 rounded text-white">
           Swap
         </button>
+
+        {processing && (
+          <svg className="animate-spin h-4 w-4 text-blue-400" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        )}
 
         {diffResult && (
           <span className={`ml-auto text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
