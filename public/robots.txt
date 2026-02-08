@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://json.o6r.org/sitemap.xml
