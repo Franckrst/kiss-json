@@ -107,6 +107,7 @@ export const JsonEditor = memo(function JsonEditor({
         keymap.of([...defaultKeymap, ...historyKeymap]),
         syntaxHighlighting(defaultHighlightStyle),
         EditorView.lineWrapping,
+        ...(ariaLabel ? [EditorView.contentAttributes.of({ 'aria-label': ariaLabel })] : []),
         ...(theme === 'dark' ? [oneDark] : []),
         ...(readOnly ? [EditorState.readOnly.of(true)] : []),
         ...(onChange
