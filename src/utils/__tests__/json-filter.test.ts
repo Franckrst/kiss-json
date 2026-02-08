@@ -34,6 +34,11 @@ describe('filterByPath', () => {
     expect(result).toContain('undefined')
   })
 
+  it('filters without leading dot', () => {
+    const result = filterByPath(data, 'data.users[0].name')
+    expect(JSON.parse(result)).toBe('Alice')
+  })
+
   it('returns error for invalid JSON input', () => {
     expect(() => filterByPath('{bad}', '.key')).toThrow()
   })

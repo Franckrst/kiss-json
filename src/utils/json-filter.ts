@@ -24,11 +24,12 @@ export function filterByPath(jsonString: string, path: string): string {
 }
 
 function parsePath(path: string): (string | number)[] {
+  const normalized = path.startsWith('.') || path.startsWith('[') ? path : '.' + path
   const segments: (string | number)[] = []
   const regex = /\.([^.[]+)|\[(\d+)\]/g
   let match: RegExpExecArray | null
 
-  while ((match = regex.exec(path)) !== null) {
+  while ((match = regex.exec(normalized)) !== null) {
     if (match[1] !== undefined) {
       segments.push(match[1])
     } else if (match[2] !== undefined) {
