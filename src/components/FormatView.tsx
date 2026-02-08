@@ -91,6 +91,7 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
         <select
           value={String(indent)}
           onChange={e => setIndent(e.target.value === 'tab' ? 'tab' : Number(e.target.value))}
+          aria-label="Indentation"
           className={`px-2 py-1 text-xs border rounded ${theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
         >
           <option value="2">2 spaces</option>
@@ -128,7 +129,7 @@ function FormatView({ theme, showToast, content, onContentChange: setContent }: 
         onDrop={handleDrop}
       >
         <div className={`${filterPath ? 'w-1/2' : 'w-full'} h-full`}>
-          <JsonEditor value={content} onChange={setContent} theme={theme} />
+          <JsonEditor value={content} onChange={setContent} theme={theme} ariaLabel="JSON editor" />
         </div>
         {filterPath && (
           <div className="w-1/2 h-full">

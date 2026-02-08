@@ -6,6 +6,7 @@ interface JsonEditorProps {
   readOnly?: boolean
   theme?: 'dark' | 'light'
   lineClasses?: Map<number, string>
+  ariaLabel?: string
 }
 
 // Cache CodeMirror modules after first load
@@ -63,6 +64,7 @@ export const JsonEditor = memo(function JsonEditor({
   readOnly = false,
   theme = 'dark',
   lineClasses,
+  ariaLabel,
 }: JsonEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<any>(null)
@@ -161,6 +163,8 @@ export const JsonEditor = memo(function JsonEditor({
   return (
     <div
       ref={containerRef}
+      role="group"
+      aria-label={ariaLabel}
       className={`h-full w-full overflow-auto border rounded ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}
     />
   )

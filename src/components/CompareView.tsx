@@ -150,7 +150,7 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <JsonEditor value={leftContent} onChange={setLeftContent} theme={theme} lineClasses={lineDiffs.leftLines} />
+              <JsonEditor value={leftContent} onChange={setLeftContent} theme={theme} lineClasses={lineDiffs.leftLines} ariaLabel="Original JSON editor" />
             </div>
           </div>
           <div className="flex flex-col w-1/2">
@@ -168,7 +168,7 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <JsonEditor value={rightContent} onChange={setRightContent} theme={theme} lineClasses={lineDiffs.rightLines} />
+              <JsonEditor value={rightContent} onChange={setRightContent} theme={theme} lineClasses={lineDiffs.rightLines} ariaLabel="Modified JSON editor" />
             </div>
           </div>
         </div>

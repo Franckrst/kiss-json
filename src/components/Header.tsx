@@ -51,7 +51,7 @@ export const Header = memo(function Header({ activeTab, onTabChange, theme, onTo
               ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
-          aria-label="Toggle theme"
+          aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
         >
           {theme === 'dark' ? '☽ Dark' : '☀ Light'}
         </button>
