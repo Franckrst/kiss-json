@@ -34,7 +34,7 @@ export const Header = memo(function Header({ activeTab, onTabChange, theme, onTo
 
       <div className="flex items-center gap-3">
         <a
-          href="https://github.com/OWNER/kiss-json"
+          href="https://github.com/Franckrst/kiss-json"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="GitHub"
