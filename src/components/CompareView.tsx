@@ -1,10 +1,8 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { diffLines } from 'diff'
 import { JsonEditor } from './JsonEditor'
-import { computeJsonDiff } from '../utils/json-diff'
 import type { DiffResult } from '../utils/json-diff'
-import { formatJson } from '../utils/json-format'
-import { validateJson } from '../utils/json-validate'
+import { useJsonWorker } from '../hooks/useJsonWorker'
 
 interface CompareViewProps {
   theme: 'dark' | 'light'
@@ -57,17 +55,41 @@ function computeLineDiffs(left: string, right: string) {
 function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLeftContent }: CompareViewProps) {
   const [rightContent, setRightContent] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('text')
+  const worker = useJsonWorker()
 
-  const leftValid = useMemo(() => validateJson(leftContent), [leftContent])
-  const rightValid = useMemo(() => validateJson(rightContent), [rightContent])
+  const [leftValid, setLeftValid] = useState<{ valid: boolean }>({ valid: false })
+  const [rightValid, setRightValid] = useState<{ valid: boolean }>({ valid: false })
 
-  const diffResult = useMemo(() => {
-    if (!leftValid.valid || !rightValid.valid) return null
-    try {
-      return computeJsonDiff(leftContent, rightContent)
-    } catch {
-      return null
+  useEffect(() => {
+    let cancelled = false
+    worker.validate(leftContent).then(result => {
+      if (!cancelled) setLeftValid(result)
+    })
+    return () => { cancelled = true }
+  }, [leftContent])
+
+  useEffect(() => {
+    let cancelled = false
+    worker.validate(rightContent).then(result => {
+      if (!cancelled) setRightValid(result)
+    })
+    return () => { cancelled = true }
+  }, [rightContent])
+
+  const [diffResult, setDiffResult] = useState<DiffResult | null>(null)
+
+  useEffect(() => {
+    if (!leftValid.valid || !rightValid.valid) {
+      setDiffResult(null)
+      return
     }
+    let cancelled = false
+    worker.diff(leftContent, rightContent).then(result => {
+      if (!cancelled) setDiffResult(result as DiffResult)
+    }).catch(() => {
+      if (!cancelled) setDiffResult(null)
+    })
+    return () => { cancelled = true }
   }, [leftContent, rightContent, leftValid.valid, rightValid.valid])
 
   const lineDiffs = useMemo(
@@ -115,10 +137,11 @@ function CompareView({ theme, showToast, leftContent, onLeftContentChange: setLe
     }
   }, [urlInput, showToast])
 
-  const handleFormat = useCallback((side: 'left' | 'right') => {
+  const handleFormat = useCallback(async (side: 'left' | 'right') => {
     try {
-      if (side === 'left') setLeftContent(formatJson(leftContent))
-      else setRightContent(formatJson(rightContent))
+      const result = await worker.format(side === 'left' ? leftContent : rightContent)
+      if (side === 'left') setLeftContent(result)
+      else setRightContent(result)
     } catch {
       showToast('Invalid JSON', 'error')
     }
